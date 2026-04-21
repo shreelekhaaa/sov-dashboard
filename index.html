@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share of Voice Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#F7F6F3;
+  --card:#FFFFFF;
+  --border:#E8E5E0;
+  --text:#1A1714;
+  --muted:#7A756E;
+  --r:10px;
+  --gap:18px;
+  --asana:#F06A6A;
+  --notion:#000000;
+  --clickup:#7B68EE;
+  --monday:#FF3D57;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+
+/* ── HEADER ── */
+.hdr{background:#1C1917;color:#fff;padding:28px 36px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:-0.4px}
+.hdr .sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px;font-weight:400}
+.hdr .date{font-size:12px;color:rgba(255,255,255,.45);white-space:nowrap}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1300px;margin:0 auto;padding:28px 24px 60px}
+.section{margin-bottom:30px}
+.section-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px}
+.card h3{font-size:13px;font-weight:600;margin-bottom:16px;color:var(--text)}
+
+/* ── SOV CARDS ── */
+.sov-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+.sov-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;position:relative;overflow:hidden}
+.sov-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sov-card .brand{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.sov-card .pct{font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1}
+.sov-card .meta{font-size:12px;color:var(--muted);margin-top:8px}
+.sov-card .bar-wrap{height:4px;background:#F0EDE8;border-radius:2px;margin-top:16px;overflow:hidden}
+.sov-card .bar-fill{height:100%;border-radius:2px;transition:width .4s}
+
+/* ── CHART ROW ── */
+.chart-row{display:grid;grid-template-columns:380px 1fr;gap:var(--gap)}
+.chart-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+
+/* ── POSITION DIST TABLE ── */
+.pos-table{width:100%;border-collapse:collapse;font-size:13px}
+.pos-table th{text-align:left;padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+.pos-table th.r{text-align:right}
+.pos-table td{padding:10px 14px;border-bottom:1px solid #F2EFEA}
+.pos-table td.r{text-align:right;font-variant-numeric:tabular-nums}
+.pos-table tr:last-child td{border-bottom:none}
+.pos-table tr:hover td{background:#FAFAF8}
+.dom-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.cell-hi{display:inline-block;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:600}
+.green{background:#D1FAE5;color:#065F46}
+.yellow{background:#FEF3C7;color:#92400E}
+.red{background:#FEE2E2;color:#991B1B}
+.grey{background:#F3F4F6;color:#374151}
+
+/* ── CALLOUT ── */
+.callout{background:#FFF5F0;border:1px solid #FDDACC;border-left:4px solid var(--asana);border-radius:var(--r);padding:16px 20px;font-size:13px;line-height:1.7;margin-bottom:var(--gap)}
+.callout strong{color:#C0392B}
+
+/* ── GENERIC TABLE ── */
+.tbl-wrap{overflow-x:auto}
+.data-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.data-tbl th{text-align:left;padding:9px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+.data-tbl th.r{text-align:right}
+.data-tbl td{padding:9px 14px;border-bottom:1px solid #F2EFEA}
+.data-tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.data-tbl tr:last-child td{border-bottom:none}
+.data-tbl tr:hover td{background:#FAFAF8}
+.pos-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:600}
+.p1-3{background:#D1FAE5;color:#065F46}
+.p4-10{background:#FEF3C7;color:#92400E}
+.p11-20{background:#FEE2E2;color:#991B1B}
+.p21p{background:#F3F4F6;color:#374151}
+.pnone{background:#F3F4F6;color:#9CA3AF;font-size:11px}
+
+/* ── OPPORTUNITY CARDS ── */
+.opp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.opp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.opp-card .kw{font-size:13px;font-weight:600;margin-bottom:10px;line-height:1.4}
+.opp-card .meta-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px}
+.opp-card .meta-row span.val{font-weight:600;color:var(--text)}
+.opp-label{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-top:10px}
+.label-qw{background:#D1FAE5;color:#065F46}
+.label-cg{background:#EDE9FE;color:#4C1D95}
+
+/* ── FILTER SUMMARY TABLE ── */
+.filter-note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6}
+
+/* ── FOOTER ── */
+.footer{border-top:1px solid var(--border);margin-top:40px;padding-top:18px;font-size:11px;color:var(--muted);line-height:1.7}
+
+@media(max-width:900px){
+  .sov-cards{grid-template-columns:repeat(2,1fr)}
+  .chart-row{grid-template-columns:1fr}
+  .chart-3col{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>Share of Voice Analysis</h1>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- SOV CARDS -->
+<div class="section">
+  <div class="section-label">Share of Voice</div>
+  <div class="sov-cards" id="sov-cards"></div>
+</div>
+
+<!-- SOV CHART + POSITION TABLE -->
+<div class="section">
+  <div class="chart-row">
+    <div class="card">
+      <h3>SoV by Domain</h3>
+      <canvas id="sov-bar" style="max-height:220px"></canvas>
+    </div>
+    <div class="card">
+      <h3>SERP Position Distribution &amp; Weighted Average Position</h3>
+      <div class="tbl-wrap">
+        <table class="pos-table" id="pos-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CALLOUT -->
+<div class="callout" id="callout"></div>
+
+<!-- CONTENT GAP -->
+<div class="section">
+  <div class="section-label">Content Gap — Competitor Ranks Top 5, Asana Below Position 10</div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="data-tbl" id="gap-tbl">
+        <thead>
+          <tr>
+            <th>Keyword</th>
+            <th class="r">Volume</th>
+            <th class="r">Asana Position</th>
+            <th>Competitor</th>
+            <th class="r">Competitor Position</th>
+          </tr>
+        </thead>
+        <tbody id="gap-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOP OPPORTUNITIES -->
+<div class="section">
+  <div class="section-label">Top Opportunities — Asana Positions 11–30</div>
+  <div class="opp-grid" id="opp-grid"></div>
+  <p style="font-size:11px;color:var(--muted);margin-top:12px">
+    Only product-relevant, non-branded keywords shown. Quick Win = gap &lt; 10 positions from top 10. Content Gap = larger climb required.
+  </p>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  Analysis based on filtered Semrush organic keyword exports. Branded terms, irrelevant keywords, and volume outliers excluded before all calculations.
+  Share of Voice = Σ(Traffic ÷ Search Volume) per keyword, summed per domain, expressed as a percentage of the combined total.
+  Position weighting uses search volume as the weight. Week 1 · April 21, 2026.
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const SOV_CARDS   = [{"domain": "Asana", "label": "Asana", "sov": 30.4, "traffic": 45474, "keywords": 34, "color": "#F06A6A"}, {"domain": "Notion", "label": "Notion", "sov": 9.0, "traffic": 128791, "keywords": 7, "color": "#000000"}, {"domain": "ClickUp", "label": "ClickUp", "sov": 50.8, "traffic": 1104, "keywords": 4, "color": "#7B68EE"}, {"domain": "Monday", "label": "Monday.com", "sov": 9.9, "traffic": 7108, "keywords": 12, "color": "#FF3D57"}];
+const POS_DIST    = {"Asana": {"1-3": 26, "4-10": 8, "11-20": 0, "21+": 0}, "Notion": {"1-3": 3, "4-10": 0, "11-20": 2, "21+": 2}, "ClickUp": {"1-3": 4, "4-10": 0, "11-20": 0, "21+": 0}, "Monday": {"1-3": 7, "4-10": 5, "11-20": 0, "21+": 0}};
+const WT_AVG      = {"Asana": 2.6, "Notion": 15.8, "ClickUp": 1.0, "Monday": 4.3};
+const SOV_PCT     = {"Asana": 30.4, "Notion": 9.0, "ClickUp": 50.8, "Monday": 9.9};
+const BRAND_COLORS= {"Asana": "#F06A6A", "Notion": "#000000", "ClickUp": "#7B68EE", "Monday": "#FF3D57"};
+const CONTENT_GAPS= [{"keyword": "trip itinerary template", "volume": 9900, "asana_pos": 35, "competitor": "Notion", "comp_pos": 3}, {"keyword": "to do list template", "volume": 8100, "asana_pos": 60, "competitor": "Notion", "comp_pos": 5}, {"keyword": "to do list templates", "volume": 2900, "asana_pos": 18, "competitor": "Notion", "comp_pos": 3}, {"keyword": "assignment tracker template", "volume": 1900, "asana_pos": 15, "competitor": "Notion", "comp_pos": 2}, {"keyword": "event planning template", "volume": 1900, "asana_pos": 27, "competitor": "Notion", "comp_pos": 5}, {"keyword": "itinerary planner template", "volume": 1600, "asana_pos": 18, "competitor": "Notion", "comp_pos": 2}, {"keyword": "sample to do list", "volume": 1600, "asana_pos": 23, "competitor": "Notion", "comp_pos": 2}];
+const OPPS        = [{"keyword": "kanban board", "volume": 22200, "asana_pos": 17, "gap_to_10": 7, "label": "Quick Win"}, {"keyword": "raci chart", "volume": 18100, "asana_pos": 12, "gap_to_10": 2, "label": "Quick Win"}, {"keyword": "gantt chart template", "volume": 12100, "asana_pos": 30, "gap_to_10": 20, "label": "Content Gap"}, {"keyword": "meeting agenda template", "volume": 12100, "asana_pos": 13, "gap_to_10": 3, "label": "Quick Win"}, {"keyword": "meeting minutes template", "volume": 12100, "asana_pos": 28, "gap_to_10": 18, "label": "Content Gap"}, {"keyword": "meeting notes template", "volume": 9900, "asana_pos": 25, "gap_to_10": 15, "label": "Content Gap"}, {"keyword": "gantt", "volume": 8100, "asana_pos": 15, "gap_to_10": 5, "label": "Quick Win"}, {"keyword": "raci framework", "volume": 8100, "asana_pos": 14, "gap_to_10": 4, "label": "Quick Win"}, {"keyword": "org chart template", "volume": 5400, "asana_pos": 27, "gap_to_10": 17, "label": "Content Gap"}, {"keyword": "template carta gantt", "volume": 5400, "asana_pos": 20, "gap_to_10": 10, "label": "Content Gap"}];
+const FILTER_SUM  = [{"domain": "Asana", "original": 100, "branded": 45, "irrelevant": 9, "outliers": 10, "final": 36}, {"domain": "Notion", "original": 100, "branded": 86, "irrelevant": 7, "outliers": 0, "final": 7}, {"domain": "ClickUp", "original": 100, "branded": 89, "irrelevant": 4, "outliers": 3, "final": 4}, {"domain": "Monday", "original": 100, "branded": 77, "irrelevant": 7, "outliers": 4, "final": 12}];
+const CALLOUT_TXT = "Asana holds <strong>30.4% Share of Voice</strong> across non-branded, product-relevant keywords, behind ClickUp (50.8%) by 20.4 percentage points. Asana's weighted average position is <strong>#2.6</strong> (volume-weighted) reflecting a strong resource and template library. ClickUp's 50.8% SoV is a data artefact \u2014 only 4 keywords survived filtering (all ranking #1 on low-volume queries), so its figure overstates real visibility. Notion (9.0%) and Monday.com (9.9%) rank on fewer product-intent terms in this filtered set. The content gap and opportunity tables below show where Asana can close ground.";
+const DOMAIN_ORDER= ["Asana","Notion","ClickUp","Monday"];
+const DOMAIN_LABELS= {"Asana": "Asana", "Notion": "Notion", "ClickUp": "ClickUp", "Monday": "Monday.com"};
+
+// ── SoV Cards ────────────────────────────────────────────────────────────────
+const cardsEl = document.getElementById('sov-cards');
+SOV_CARDS.forEach(c => {
+  cardsEl.innerHTML += `
+  <div class="sov-card">
+    <style>.sov-card:nth-child(${SOV_CARDS.indexOf(c)+1})::before{background:${c.color}}</style>
+    <div class="brand" style="color:${c.color}">${c.label}</div>
+    <div class="pct" style="color:${c.color}">${c.sov}%</div>
+    <div class="meta">${c.keywords} keywords · ${c.traffic.toLocaleString()} est. traffic</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${c.sov}%;background:${c.color}"></div></div>
+  </div>`;
+});
+
+// ── SoV Horizontal Bar ────────────────────────────────────────────────────────
+new Chart(document.getElementById('sov-bar').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: DOMAIN_ORDER.map(d => DOMAIN_LABELS[d]),
+    datasets: [{
+      label: 'Share of Voice %',
+      data: DOMAIN_ORDER.map(d => SOV_PCT[d]),
+      backgroundColor: DOMAIN_ORDER.map(d => BRAND_COLORS[d] + 'CC'),
+      borderColor: DOMAIN_ORDER.map(d => BRAND_COLORS[d]),
+      borderWidth: 1,
+      borderRadius: 5,
+    }],
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { beginAtZero: true, max: 60, grid: {color:'#F0EDE8'},
+            ticks: {callback: v => v + '%'}},
+      y: { grid: {display:false} },
+    },
+    plugins: {
+      legend: {display:false},
+      tooltip: {callbacks: {label: ctx => ` ${ctx.parsed.x.toFixed(1)}% SoV`}},
+    },
+  },
+});
+
+// ── Position Distribution Table ───────────────────────────────────────────────
+function cellClass(count, bucket) {
+  if (bucket === '1-3' && count > 0) return 'green';
+  if (bucket === '21+' && count > 5) return 'red';
+  return '';
+}
+const posTbl = document.getElementById('pos-table');
+posTbl.innerHTML = `
+  <thead><tr>
+    <th>Domain</th>
+    <th class="r">Pos 1–3</th>
+    <th class="r">Pos 4–10</th>
+    <th class="r">Pos 11–20</th>
+    <th class="r">Pos 21+</th>
+    <th class="r">Wt. Avg Pos</th>
+  </tr></thead><tbody>` +
+  DOMAIN_ORDER.map(d => {
+    const b = POS_DIST[d];
+    const c1 = b['1-3']  > 0  ? 'green'  : 'grey';
+    const c4 = b['4-10'] > 0  ? 'yellow' : 'grey';
+    const c11= b['11-20']> 0  ? 'yellow' : 'grey';
+    const c21= b['21+']  > 5  ? 'red'    : 'grey';
+    return `<tr>
+      <td><span class="dom-dot" style="background:${BRAND_COLORS[d]}"></span>${DOMAIN_LABELS[d]}</td>
+      <td class="r"><span class="cell-hi ${c1}">${b['1-3']}</span></td>
+      <td class="r"><span class="cell-hi ${c4}">${b['4-10']}</span></td>
+      <td class="r"><span class="cell-hi ${c11}">${b['11-20']}</span></td>
+      <td class="r"><span class="cell-hi ${c21}">${b['21+']}</span></td>
+      <td class="r" style="font-weight:600">#${WT_AVG[d]}</td>
+    </tr>`;
+  }).join('') + `</tbody>`;
+
+// ── Callout ───────────────────────────────────────────────────────────────────
+document.getElementById('callout').innerHTML = CALLOUT_TXT;
+
+// ── Content Gap Table ─────────────────────────────────────────────────────────
+function posBadge(pos) {
+  if (!pos) return '<span class="pos-badge pnone">—</span>';
+  if (pos <= 3)  return `<span class="pos-badge p1-3">#${pos}</span>`;
+  if (pos <= 10) return `<span class="pos-badge p4-10">#${pos}</span>`;
+  if (pos <= 20) return `<span class="pos-badge p11-20">#${pos}</span>`;
+  return `<span class="pos-badge p21p">#${pos}</span>`;
+}
+const gapTbody = document.getElementById('gap-tbody');
+CONTENT_GAPS.forEach(g => {
+  gapTbody.innerHTML += `<tr>
+    <td style="font-weight:500">${g.keyword}</td>
+    <td class="r">${g.volume >= 1000 ? (g.volume/1000).toFixed(1)+'K' : g.volume}</td>
+    <td class="r">${posBadge(g.asana_pos)}</td>
+    <td>${g.competitor}</td>
+    <td class="r">${posBadge(g.comp_pos)}</td>
+  </tr>`;
+});
+if (!CONTENT_GAPS.length) gapTbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);font-style:italic">No gaps found in filtered keyword set.</td></tr>';
+
+// ── Opportunities Grid ────────────────────────────────────────────────────────
+const oppGrid = document.getElementById('opp-grid');
+OPPS.forEach(o => {
+  oppGrid.innerHTML += `
+  <div class="opp-card">
+    <div class="kw">${o.keyword}</div>
+    <div class="meta-row"><span>Search Volume</span><span class="val">${o.volume >= 1000 ? (o.volume/1000).toFixed(1)+'K' : o.volume}</span></div>
+    <div class="meta-row"><span>Current Position</span><span class="val">#${o.asana_pos}</span></div>
+    <div class="meta-row"><span>Gap to Top 10</span><span class="val">${o.gap_to_10} positions</span></div>
+    <span class="opp-label ${o.label === 'Quick Win' ? 'label-qw' : 'label-cg'}">${o.label}</span>
+  </div>`;
+});
+if (!OPPS.length) oppGrid.innerHTML = '<p style="color:var(--muted);font-style:italic">No product-relevant opportunities found in positions 11–30.</p>';
+
+// ── Filter Summary Table ───────────────────────────────────────────────────────
+const filterTbody = document.getElementById('filter-tbody');
+FILTER_SUM.forEach(r => {
+  filterTbody.innerHTML += `<tr>
+    <td><span class="dom-dot" style="background:${BRAND_COLORS[r.domain]}"></span>${DOMAIN_LABELS[r.domain]}</td>
+    <td class="r">${r.original}</td>
+    <td class="r" style="color:#991B1B">${r.branded}</td>
+    <td class="r" style="color:#92400E">${r.irrelevant}</td>
+    <td class="r" style="color:#374151">${r.outliers}</td>
+    <td class="r"><strong>${r.final}</strong></td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
